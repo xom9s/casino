@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>Košice Casino</title>
+    <meta
+      name="description"
+      content="Minimal slot with photos as symbols, synced history and smooth animations."
+    />
+    <style>
+      :root {
+        --bg: #0f1420;
+        --panel: #121a28;
+        --panel2: #0f1a2a;
+        --text: #e8f0ff;
+        --muted: #9fb3d1;
+        --line: #22324a;
+        --accent: #f0c419;
+        --good: #78f094;
+        --bad: #ff6b6b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.5 system-ui, Segoe UI, Roboto, Arial, sans-serif;
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .wrap {
+        width: min(1000px, 100%);
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1.2fr 0.9fr;
+      }
+      @media (max-width: 900px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .title {
+        font-weight: 800;
+      }
+      .slot {
+        padding: 12px;
+      }
+      .window {
+        position: relative;
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        overflow: hidden;
+      }
+      .window::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("nedorozumenie.jpg") center/cover no-repeat;
+        opacity: 0.08;
+        mix-blend-mode: luminosity;
+        pointer-events: none;
+      }
+      .reels {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        position: relative;
+        z-index: 1;
+      }
+      .reel {
+        background: #0f1a2a;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        height: 110px;
+        overflow: hidden;
+        position: relative;
+      }
+      .stop {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 6px;
+        will-change: transform;
+        transition: transform 1s cubic-bezier(0.2, 0.6, 0.1, 1);
+      }
+      .reel.delay-1 .stop {
+        transition-duration: 1.15s;
+      }
+      .reel.delay-2 .stop {
+        transition-duration: 1.3s;
+      }
+      .sym {
+        display: block;
+        height: 90px;
+        width: auto;
+      }
+      .cell {
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .midline {
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        top: calc(50% - 1px);
+        height: 2px;
+        background: #ffffff40;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+      .pill {
+        background: #0f1a2a;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 700;
+      }
+      .money {
+        color: var(--accent);
+      }
+      .btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-weight: 800;
+        background: var(--accent);
+        color: #1b1200;
+        cursor: pointer;
+      }
+      .btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .sec {
+        padding: 12px;
+      }
+      h2 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        padding: 6px;
+        border-bottom: 1px dashed var(--line);
+        text-align: left;
+      }
+      th {
+        color: #cfe0ff;
+        font-weight: 800;
+      }
+      td.pay {
+        font-weight: 900;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .history {
+        max-height: 220px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px;
+        background: #0f1a2a;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+        padding: 6px 2px;
+        border-bottom: 1px dashed var(--line);
+      }
+      .row:last-child {
+        border-bottom: 0;
+      }
+      .good {
+        color: var(--good);
+      }
+      .bad {
+        color: var(--bad);
+      }
+      .footer {
+        padding: 10px 12px;
+        color: var(--muted);
+        font-size: 12px;
+        border-top: 1px solid var(--line);
+      }
+      .thumb {
+        height: 18px;
+        width: auto;
+        vertical-align: middle;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <p
+        style="
+          grid-column: 1 / -1;
+          text-align: center;
+          font-size: 13px;
+          color: #9fb3d1;
+          margin: 12px 0;
+        "
+      >
+        <strong>Anotácia:</strong> Demo Košice Casino využíva RNG podobné
+        reálnym kasínam. Projekt ukazuje, že cieľom nie je zárobok, ale zábava s
+        priateľmi. Symbolom tohto slotu je známa postava z internetového mému.
+      </p>
+      <section class="card">
+        <div class="hdr">
+          <div class="logo">
+            <div><div class="title">Košice Casino</div></div>
+          </div>
+        </div>
+
+        <div class="slot">
+          <div class="window">
+            <div class="reels" id="reels">
+              <div class="reel" id="reel-0"><div class="stop"></div></div>
+              <div class="reel" id="reel-1"><div class="stop"></div></div>
+              <div class="reel" id="reel-2"><div class="stop"></div></div>
+            </div>
+            <div class="midline"></div>
+          </div>
+
+          <div class="controls">
+            <div class="pill">
+              Balance: <span id="balance" class="money">1000</span>
+            </div>
+            <div class="pill">
+              Bet:
+              <select id="bet">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+            <div class="pill">
+              Last win: <span id="lastwin" class="good">0</span>
+            </div>
+            <button class="btn" id="spin">SPIN</button>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2>Paytable</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>3 in a row</th>
+                <th>2 in a row</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <img class="thumb" src="facepalm.png" alt="facepalm" />
+                  Facepalm (rare)
+                </td>
+                <td class="pay">×50 bet</td>
+                <td>×2 bet</td>
+              </tr>
+              <tr>
+                <td>
+                  <img class="thumb" src="nahnevany.png" alt="angry" /> Angry
+                </td>
+                <td class="pay">×20 bet</td>
+                <td>×1.5 bet</td>
+              </tr>
+              <tr>
+                <td>
+                  <img class="thumb" src="unaveny.png" alt="tired" /> Tired
+                </td>
+                <td class="pay">×12 bet</td>
+                <td>×1.2 bet</td>
+              </tr>
+              <tr>
+                <td>
+                  <img class="thumb" src="otazka.png" alt="otazka" /> Otazka
+                </td>
+                <td class="pay">×8 bet</td>
+                <td>×1.1 bet</td>
+              </tr>
+              <tr>
+                <td>
+                  <img class="thumb" src="casino.png" alt="casino chip/table" />
+                  Casino
+                </td>
+                <td class="pay">×6 bet</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>
+                  <img
+                    class="thumb"
+                    src="nedorozumenie.jpg"
+                    alt="nedorozumenie portrait"
+                  />
+                  nedorozumenie (common)
+                </td>
+                <td class="pay">×4 bet</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer">Educational/demo only</div>
+      </section>
+
+      <aside class="card">
+        <div class="hdr">
+          <div class="title">Session</div>
+          <div style="display: flex; gap: 6px; align-items: center">
+            <span class="small">Seed</span>
+            <input
+              type="number"
+              id="seed"
+              value="777"
+              style="
+                width: 110px;
+                background: #0f1a2a;
+                color: var(--text);
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 6px;
+                font-weight: 700;
+              "
+            />
+            <button class="btn" id="reseeds" style="padding: 6px 10px">
+              Apply
+            </button>
+          </div>
+        </div>
+        <div class="sec">
+          <h2>Spin history</h2>
+          <div id="history" class="history" aria-live="polite"></div>
+        </div>
+        <div class="sec">
+          <h2>Fairness</h2>
+          <p class="small">
+            Each spin draws 3 symbols by weight. Same seed ⇒ repeatable
+            outcomes.
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <script>
+      let STATE = 123456789;
+      function setSeed(n) {
+        STATE = n | 0 || 1;
+      }
+      function rnd() {
+        let x = STATE | 0;
+        x ^= x << 13;
+        x ^= x >>> 17;
+        x ^= x << 5;
+        STATE = x | 0;
+        return (x >>> 0) / 4294967296;
+      }
+
+      const SYMBOLS = [
+        { src: "facepalm.png", name: "facepalm", weight: 2, pay3: 40, pay2: 3 },
+        {
+          src: "nahnevany.png",
+          name: "nahnevany",
+          weight: 6,
+          pay3: 20,
+          pay2: 2,
+        },
+        {
+          src: "unaveny.png",
+          name: "unaveny",
+          weight: 10,
+          pay3: 12,
+          pay2: 1.8,
+        },
+        { src: "otazka.png", name: "otazka", weight: 14, pay3: 8, pay2: 1.4 },
+        { src: "casino.png", name: "casino", weight: 18, pay3: 6, pay2: 0 },
+        {
+          src: "nedorozumenie.jpg",
+          name: "nedorozumenie",
+          weight: 22,
+          pay3: 4,
+          pay2: 0,
+        },
+      ];
+      const TOTAL_W = SYMBOLS.reduce((a, s) => a + s.weight, 0);
+      function drawSymbol() {
+        const r = rnd() * TOTAL_W;
+        let acc = 0;
+        for (const s of SYMBOLS) {
+          acc += s.weight;
+          if (r < acc) return s;
+        }
+        return SYMBOLS[SYMBOLS.length - 1];
+      }
+
+      const reels = [...document.querySelectorAll(".reel")];
+      const spinBtn = document.getElementById("spin");
+      const balanceEl = document.getElementById("balance");
+      const betEl = document.getElementById("bet");
+      const lastWinEl = document.getElementById("lastwin");
+      const historyEl = document.getElementById("history");
+      const seedInput = document.getElementById("seed");
+      const reseedBtn = document.getElementById("reseeds");
+
+      let balance = 1000,
+        spinning = false;
+      setSeed(777);
+
+      const ITEM_H = 98,
+        KEEP_TAIL = 7;
+      const reelPos = [0, 0, 0];
+      const fmt = (n) => Math.round(n * 100) / 100;
+
+      function cellWithImg(src, alt) {
+        const span = document.createElement("span");
+        span.className = "cell";
+        const img = document.createElement("img");
+        img.className = "sym";
+        img.src = src;
+        img.alt = alt || "";
+        span.appendChild(img);
+        return span;
+      }
+      function addHistory(icons, delta) {
+        const row = document.createElement("div");
+        row.className = "row";
+        const left = document.createElement("div");
+        left.innerHTML = icons
+          .map((s) => `<img class="thumb" src="${s.src}" alt="${s.name}">`)
+          .join(" ");
+        const right = document.createElement("div");
+        right.innerHTML =
+          delta >= 0
+            ? `<span class="good">+${fmt(delta)} cr</span>`
+            : `<span class="bad">${fmt(delta)} cr</span>`;
+        row.appendChild(left);
+        row.appendChild(right);
+        historyEl.prepend(row);
+      }
+      function evaluate(a, b, c, bet) {
+        if (a === b && b === c) return bet * a.pay3;
+        if (a === b || a === c || b === c) {
+          const sym = a === b ? a : a === c ? a : b;
+          if (sym.pay2 > 0) return bet * sym.pay2;
+        }
+        return 0;
+      }
+
+      function updateReelDOM(results) {
+        results.forEach((sym, i) => {
+          const reel = reels[i];
+          const stop = reel.querySelector(".stop");
+
+          const fillerCount = 5 + Math.floor(rnd() * 4);
+          for (let k = 0; k < fillerCount; k++) {
+            const r = SYMBOLS[Math.floor(rnd() * SYMBOLS.length)];
+            stop.appendChild(cellWithImg(r.src, r.name));
+          }
+          stop.appendChild(cellWithImg(sym.src, sym.name));
+
+          reel.classList.remove("delay-1", "delay-2");
+          if (i === 1) reel.classList.add("delay-1");
+          if (i === 2) reel.classList.add("delay-2");
+
+          reelPos[i] = stop.children.length - 1;
+          requestAnimationFrame(() => {
+            stop.style.transform = `translateY(-${reelPos[i] * ITEM_H}px)`;
+          });
+
+          const dur = i === 0 ? 1000 : i === 1 ? 1150 : 1300;
+          setTimeout(() => {
+            const keepFrom = Math.max(0, stop.children.length - KEEP_TAIL);
+            const tail = [...stop.children].slice(keepFrom);
+            stop.innerHTML = "";
+            tail.forEach((n) => stop.appendChild(n));
+            reelPos[i] = stop.children.length - 1;
+            const prev = stop.style.transition;
+            stop.style.transition = "none";
+            stop.style.transform = `translateY(-${reelPos[i] * ITEM_H}px)`;
+            requestAnimationFrame(() => {
+              stop.style.transition = prev || "";
+            });
+          }, dur + 40);
+        });
+      }
+
+      async function spin() {
+        if (spinning) return;
+        const bet = parseInt(betEl.value, 10);
+        if (balance < bet) {
+          alert("Not enough credits!");
+          return;
+        }
+
+        spinning = true;
+        spinBtn.disabled = true;
+        lastWinEl.textContent = "0";
+        balance -= bet;
+        balanceEl.textContent = fmt(balance);
+
+        const results = [drawSymbol(), drawSymbol(), drawSymbol()];
+        updateReelDOM(results);
+
+        await new Promise((r) => setTimeout(r, 1350));
+
+        const win = evaluate(results[0], results[1], results[2], bet);
+        if (win > 0) {
+          balance += win;
+          lastWinEl.textContent = fmt(win);
+        }
+        balanceEl.textContent = fmt(balance);
+
+        addHistory(results, win - bet);
+
+        spinning = false;
+        spinBtn.disabled = false;
+      }
+
+      spinBtn.addEventListener("click", spin);
+      reseedBtn.addEventListener("click", () => {
+        setSeed(Number(seedInput.value || 0));
+        reseedBtn.textContent = "Seed ✓";
+        setTimeout(() => (reseedBtn.textContent = "Apply"), 800);
+      });
+
+      (function init() {
+        SYMBOLS.forEach((s) => {
+          const i = new Image();
+          i.src = s.src;
+        });
+        reels.forEach((reel, i) => {
+          const stop = reel.querySelector(".stop");
+          for (let j = 0; j < 6; j++) {
+            const r = SYMBOLS[Math.floor(rnd() * SYMBOLS.length)];
+            stop.appendChild(cellWithImg(r.src, r.name));
+          }
+          const s = drawSymbol();
+          stop.appendChild(cellWithImg(s.src, s.name));
+          reelPos[i] = stop.children.length - 1;
+          stop.style.transition = "none";
+          stop.style.transform = `translateY(-${reelPos[i] * ITEM_H}px)`;
+          requestAnimationFrame(() => {
+            stop.style.transition = "";
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
